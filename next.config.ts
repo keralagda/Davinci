@@ -1,12 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Vercel handles deployment — no standalone needed
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   reactStrictMode: false,
   images: {
@@ -14,8 +10,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: '**' },
     ],
   },
-  // Ensure Prisma works in serverless
-  serverExternalPackages: ['@prisma/client', '@libsql/client'],
+  serverExternalPackages: ['@prisma/client', '@libsql/client', 'nodemailer'],
 };
 
 export default nextConfig;
