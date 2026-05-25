@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createZAI, generateTextWithContext } from '@/lib/ai-helpers';
+import { generateTextWithContext } from '@/lib/ai-helpers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,34 +23,63 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract web page content using the z-ai-web-dev-sdk web-reader
+    // Fetch web page content directly
     let pageContent = '';
     let pageTitle = '';
     let pageDescription = '';
 
     try {
-      const zai = await createZAI();
-      const extractResult = await zai.webReader.extract({ url });
+      const fetchResponse = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; DavinciBot/1.0)',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        signal: AbortSignal.timeout(10000),
+      });
 
-      if (typeof extractResult === 'string') {
-        pageContent = extractResult;
-      } else if (typeof extractResult === 'object' && extractResult !== null) {
-        const res = extractResult as Record<string, unknown>;
-        pageContent = (res.content as string) || (res.html as string) || (res.text as string) || '';
-        pageTitle = (res.title as string) || '';
-        pageDescription = (res.description as string) || (res.excerpt as string) || '';
-
-        if (!pageContent && res.markdown) {
-          pageContent = res.markdown as string;
-        }
+      if (!fetchResponse.ok) {
+        throw new Error(`HTTP ${fetchResponse.status}`);
       }
+
+      const html = await fetchResponse.text();
+
+      // Extract title
+      const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      if (titleMatch) {
+        pageTitle = titleMatch[1].trim().replace(/\s+/g, ' ');
+      }
+
+      // Extract meta description
+      const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([\s\S]*?)["']/i);
+      if (descMatch) {
+        pageDescription = descMatch[1].trim();
+      }
+
+      // Extract text content: remove scripts, styles, and HTML tags
+      let textContent = html
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '')
+        .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+        .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+        .replace(/<header[\s\S]*?<\/header>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/\s+/g, ' ')
+        .trim();
 
       // Limit content to avoid token limits
-      if (pageContent.length > 12000) {
-        pageContent = pageContent.substring(0, 12000) + '\n\n[Content truncated...]';
+      if (textContent.length > 12000) {
+        textContent = textContent.substring(0, 12000) + '\n\n[Content truncated...]';
       }
+
+      pageContent = textContent;
     } catch (error) {
-      console.error('Web reader error:', error);
+      console.error('Web fetch error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch or extract content from the URL. Please check the URL and try again.' },
         { status: 400 }

@@ -29,6 +29,9 @@ import {
   Activity,
   Eye,
   EyeOff,
+  CreditCard,
+  Plus,
+  Pencil,
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -475,7 +478,7 @@ export function AdminPage() {
         if (val === 'users' && users.length === 0) fetchUsers()
         if (val === 'settings' && Object.keys(settings).length === 0) fetchSettings()
       }}>
-        <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <TabsList className="grid w-full grid-cols-5 max-w-2xl">
           <TabsTrigger value="overview" className="gap-1.5">
             <BarChart3 className="size-3.5" />
             Overview
@@ -483,6 +486,14 @@ export function AdminPage() {
           <TabsTrigger value="users" className="gap-1.5">
             <Users className="size-3.5" />
             Users
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="gap-1.5">
+            <CreditCard className="size-3.5" />
+            Subscriptions
+          </TabsTrigger>
+          <TabsTrigger value="plans" className="gap-1.5">
+            <Crown className="size-3.5" />
+            Plans
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-1.5">
             <Settings className="size-3.5" />
@@ -945,6 +956,16 @@ export function AdminPage() {
             </>
           )}
         </TabsContent>
+
+        {/* ── Subscriptions Tab ──────────────────────────────────────── */}
+        <TabsContent value="subscriptions" className="space-y-6">
+          <SubscriptionsTab />
+        </TabsContent>
+
+        {/* ── Plans Tab ──────────────────────────────────────────────── */}
+        <TabsContent value="plans" className="space-y-6">
+          <PlansTab />
+        </TabsContent>
       </Tabs>
 
       {/* ── Delete User Dialog ──────────────────────────────────────── */}
@@ -1007,6 +1028,612 @@ export function AdminPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+// ─── Subscriptions Tab Component ─────────────────────────────────────────────
+
+function SubscriptionsTab() {
+  const [subscriptions, setSubscriptions] = useState<any[]>([])
+  const [revenue, setRevenue] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [statusFilter, setStatusFilter] = useState('')
+  const [planFilter, setPlanFilter] = useState('')
+
+  const fetchSubscriptions = useCallback(async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams({ page: page.toString(), limit: '15' })
+      if (statusFilter) params.set('status', statusFilter)
+      if (planFilter) params.set('planType', planFilter)
+
+      const res = await fetch(`/api/admin/subscriptions?${params}`)
+      if (res.ok) {
+        const data = await res.json()
+        setSubscriptions(data.subscriptions || [])
+        setTotal(data.total || 0)
+        setRevenue(data.revenue || null)
+      }
+    } catch (err) {
+      console.error('Subscriptions fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [page, statusFilter, planFilter])
+
+  useEffect(() => { fetchSubscriptions() }, [fetchSubscriptions])
+
+  const handleAction = async (subscriptionId: string, action: string, data?: any) => {
+    try {
+      const res = await fetch('/api/admin/subscriptions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriptionId, action, data }),
+      })
+      if (res.ok) {
+        toast.success(`Subscription ${action} successful`)
+        fetchSubscriptions()
+      } else {
+        toast.error('Failed to update subscription')
+      }
+    } catch {
+      toast.error('Failed to update subscription')
+    }
+  }
+
+  const totalPages = Math.ceil(total / 15)
+
+  return (
+    <div className="space-y-6">
+      {/* Revenue Summary Cards */}
+      {revenue && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-500/5 to-emerald-500/[0.02]">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="size-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <DollarSign className="size-4 text-emerald-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold">${revenue.mrr.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">Monthly Recurring Revenue</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-teal-500/5 to-teal-500/[0.02]">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="size-9 rounded-lg bg-teal-500/10 flex items-center justify-center">
+                  <TrendingUp className="size-4 text-teal-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold">${revenue.arr.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">Annual Recurring Revenue</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-cyan-500/5 to-cyan-500/[0.02]">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="size-9 rounded-lg bg-cyan-500/10 flex items-center justify-center">
+                  <Users className="size-4 text-cyan-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold">{revenue.totalActive}</p>
+              <p className="text-sm text-muted-foreground">Active Subscriptions</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-500/5 to-amber-500/[0.02]">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="size-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <BarChart3 className="size-4 text-amber-400" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold">
+                {Object.keys(revenue.planBreakdown || {}).length}
+              </p>
+              <p className="text-sm text-muted-foreground">Active Plan Types</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Filters */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Select value={statusFilter || 'all'} onValueChange={(val) => { setStatusFilter(val === 'all' ? '' : val); setPage(1) }}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={planFilter || 'all'} onValueChange={(val) => { setPlanFilter(val === 'all' ? '' : val); setPage(1) }}>
+              <SelectTrigger className="w-full sm:w-40">
+                <SelectValue placeholder="All Plans" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plans</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="starter">Starter</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+                <SelectItem value="enterprise">Enterprise</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon" onClick={fetchSubscriptions} title="Refresh">
+              <RefreshCcw className="size-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Subscriptions Table */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-6 space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          ) : subscriptions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <CreditCard className="size-10 text-muted-foreground/40 mb-3" />
+              <p className="text-sm font-medium">No subscriptions found</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Plan</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Started</TableHead>
+                      <TableHead>Ends</TableHead>
+                      <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {subscriptions.map((sub: any) => (
+                      <TableRow key={sub.id}>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm">{sub.user?.name || 'Unknown'}</span>
+                            <span className="text-xs text-muted-foreground">{sub.user?.email}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={`text-[10px] capitalize ${getPlanColor(sub.planType)}`}>
+                            {sub.planType}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={`text-[10px] ${
+                            sub.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-0' :
+                            sub.status === 'cancelled' ? 'bg-red-500/10 text-red-500 border-0' :
+                            'bg-muted text-muted-foreground border-0'
+                          }`}>
+                            {sub.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-mono">
+                          ${(sub.amount || 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {new Date(sub.startDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {sub.endDate ? new Date(sub.endDate).toLocaleDateString() : '—'}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="size-8">
+                                <MoreHorizontal className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {sub.status === 'active' && (
+                                <DropdownMenuItem onClick={() => handleAction(sub.id, 'cancel')}>
+                                  <XCircle className="size-3.5 mr-2 text-red-500" />
+                                  Cancel
+                                </DropdownMenuItem>
+                              )}
+                              {sub.status !== 'active' && (
+                                <DropdownMenuItem onClick={() => handleAction(sub.id, 'activate')}>
+                                  <CheckCircle2 className="size-3.5 mr-2 text-emerald-500" />
+                                  Reactivate
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handleAction(sub.id, 'extend', { months: 1 })}>
+                                <Plus className="size-3.5 mr-2" />
+                                Extend 1 Month
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              {/* Pagination */}
+              <div className="flex items-center justify-between p-4 border-t">
+                <span className="text-xs text-muted-foreground">{total} total subscriptions</span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <span className="text-xs text-muted-foreground">Page {page} of {totalPages || 1}</span>
+                  <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage(page + 1)}>
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// ─── Plans Tab Component ─────────────────────────────────────────────────────
+
+function PlansTab() {
+  const [plans, setPlans] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editingPlan, setEditingPlan] = useState<any>(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [saving, setSaving] = useState(false)
+
+  const [formData, setFormData] = useState({
+    name: '', slug: '', description: '', price: 0, interval: 'monthly',
+    wordsLimit: 0, imagesLimit: 0, chatMessagesLimit: 0, codeLimit: 0, audioMinutesLimit: 0,
+    features: '' as string, isPopular: false, isActive: true, sortOrder: 0,
+  })
+
+  const fetchPlans = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/plans')
+      if (res.ok) {
+        const data = await res.json()
+        setPlans(data.plans || [])
+      }
+    } catch (err) {
+      console.error('Plans fetch error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchPlans() }, [fetchPlans])
+
+  const resetForm = () => {
+    setFormData({
+      name: '', slug: '', description: '', price: 0, interval: 'monthly',
+      wordsLimit: 0, imagesLimit: 0, chatMessagesLimit: 0, codeLimit: 0, audioMinutesLimit: 0,
+      features: '', isPopular: false, isActive: true, sortOrder: 0,
+    })
+  }
+
+  const openEdit = (plan: any) => {
+    setEditingPlan(plan)
+    setFormData({
+      name: plan.name,
+      slug: plan.slug,
+      description: plan.description || '',
+      price: plan.price,
+      interval: plan.interval,
+      wordsLimit: plan.wordsLimit,
+      imagesLimit: plan.imagesLimit,
+      chatMessagesLimit: plan.chatMessagesLimit,
+      codeLimit: plan.codeLimit,
+      audioMinutesLimit: plan.audioMinutesLimit,
+      features: Array.isArray(plan.features) ? plan.features.join('\n') : '',
+      isPopular: plan.isPopular,
+      isActive: plan.isActive,
+      sortOrder: plan.sortOrder,
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const payload = {
+        ...formData,
+        features: formData.features.split('\n').filter(Boolean),
+      }
+
+      if (editingPlan) {
+        // Update
+        const res = await fetch('/api/admin/plans', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editingPlan.id, ...payload }),
+        })
+        if (res.ok) {
+          toast.success('Plan updated')
+          setEditingPlan(null)
+          fetchPlans()
+        } else {
+          toast.error('Failed to update plan')
+        }
+      } else {
+        // Create
+        const res = await fetch('/api/admin/plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (res.ok) {
+          toast.success('Plan created')
+          setShowCreateDialog(false)
+          resetForm()
+          fetchPlans()
+        } else {
+          toast.error('Failed to create plan')
+        }
+      }
+    } catch {
+      toast.error('Failed to save plan')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this plan?')) return
+    try {
+      const res = await fetch(`/api/admin/plans?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        toast.success('Plan deleted')
+        fetchPlans()
+      } else {
+        toast.error('Failed to delete plan')
+      }
+    } catch {
+      toast.error('Failed to delete plan')
+    }
+  }
+
+  const handleToggleActive = async (plan: any) => {
+    try {
+      const res = await fetch('/api/admin/plans', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: plan.id, isActive: !plan.isActive }),
+      })
+      if (res.ok) {
+        toast.success(`Plan ${plan.isActive ? 'disabled' : 'enabled'}`)
+        fetchPlans()
+      }
+    } catch {
+      toast.error('Failed to update plan')
+    }
+  }
+
+  // Plan form (shared between create and edit)
+  const PlanForm = () => (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Plan Name</Label>
+          <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="e.g., Professional" />
+        </div>
+        <div className="space-y-2">
+          <Label>Slug</Label>
+          <Input value={formData.slug} onChange={(e) => setFormData({ ...formData, slug: e.target.value })} placeholder="e.g., professional" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Description</Label>
+        <Input value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Short description" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label>Price ($)</Label>
+          <Input type="number" step="0.01" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label>Interval</Label>
+          <Select value={formData.interval} onValueChange={(val) => setFormData({ ...formData, interval: val })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+              <SelectItem value="one-time">One-time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Sort Order</Label>
+          <Input type="number" value={formData.sortOrder} onChange={(e) => setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })} />
+        </div>
+      </div>
+      <Separator />
+      <p className="text-sm font-medium">Usage Limits (0 = unlimited)</p>
+      <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="space-y-2">
+          <Label className="text-xs">Words</Label>
+          <Input type="number" value={formData.wordsLimit} onChange={(e) => setFormData({ ...formData, wordsLimit: parseInt(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Images</Label>
+          <Input type="number" value={formData.imagesLimit} onChange={(e) => setFormData({ ...formData, imagesLimit: parseInt(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Chat Messages</Label>
+          <Input type="number" value={formData.chatMessagesLimit} onChange={(e) => setFormData({ ...formData, chatMessagesLimit: parseInt(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Code Gens</Label>
+          <Input type="number" value={formData.codeLimit} onChange={(e) => setFormData({ ...formData, codeLimit: parseInt(e.target.value) || 0 })} />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Audio (min)</Label>
+          <Input type="number" value={formData.audioMinutesLimit} onChange={(e) => setFormData({ ...formData, audioMinutesLimit: parseInt(e.target.value) || 0 })} />
+        </div>
+      </div>
+      <Separator />
+      <div className="space-y-2">
+        <Label>Features (one per line)</Label>
+        <Textarea
+          value={formData.features}
+          onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+          placeholder="Unlimited AI chat&#10;200 images/month&#10;Priority support"
+          rows={5}
+        />
+      </div>
+      <div className="flex items-center gap-6">
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={formData.isPopular} onChange={(e) => setFormData({ ...formData, isPopular: e.target.checked })} className="rounded" />
+          Mark as Popular
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} className="rounded" />
+          Active
+        </label>
+      </div>
+    </div>
+  )
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-24 w-full" />
+        ))}
+      </div>
+    )
+  }
+
+  // Edit mode
+  if (editingPlan) {
+    return (
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Edit Plan: {editingPlan.name}</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => setEditingPlan(null)}>Cancel</Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <PlanForm />
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-32">
+              {saving ? <><Loader2 className="size-4 mr-2 animate-spin" />Saving...</> : <><Save className="size-4 mr-2" />Save Changes</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Create mode
+  if (showCreateDialog) {
+    return (
+      <Card className="border-0 shadow-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Create New Plan</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => { setShowCreateDialog(false); resetForm() }}>Cancel</Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <PlanForm />
+          <div className="flex justify-end">
+            <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white min-w-32">
+              {saving ? <><Loader2 className="size-4 mr-2 animate-spin" />Creating...</> : <><Plus className="size-4 mr-2" />Create Plan</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // List mode
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Pricing Plans</h3>
+          <p className="text-sm text-muted-foreground">Manage your subscription plans and pricing</p>
+        </div>
+        <Button onClick={() => { resetForm(); setShowCreateDialog(true) }} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Plus className="size-4 mr-2" />
+          New Plan
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {plans.map((plan: any) => (
+          <Card key={plan.id} className={`border-0 shadow-sm relative ${!plan.isActive ? 'opacity-60' : ''}`}>
+            {plan.isPopular && (
+              <div className="absolute top-3 right-3">
+                <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[10px]">Popular</Badge>
+              </div>
+            )}
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                {plan.name}
+                {!plan.isActive && <Badge variant="secondary" className="text-[10px]">Disabled</Badge>}
+              </CardTitle>
+              <CardDescription className="text-xs">{plan.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold">${plan.price}</span>
+                <span className="text-sm text-muted-foreground">/{plan.interval}</span>
+              </div>
+
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>Words: {plan.wordsLimit === 0 ? '∞' : plan.wordsLimit.toLocaleString()}</p>
+                <p>Images: {plan.imagesLimit === 0 ? '∞' : plan.imagesLimit}</p>
+                <p>Chat: {plan.chatMessagesLimit === 0 ? '∞' : plan.chatMessagesLimit}</p>
+                <p>Code: {plan.codeLimit === 0 ? '∞' : plan.codeLimit}</p>
+              </div>
+
+              {Array.isArray(plan.features) && plan.features.length > 0 && (
+                <div className="pt-2 border-t space-y-1">
+                  {plan.features.slice(0, 4).map((f: string, i: number) => (
+                    <p key={i} className="text-xs flex items-center gap-1.5">
+                      <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
+                      {f}
+                    </p>
+                  ))}
+                  {plan.features.length > 4 && (
+                    <p className="text-xs text-muted-foreground">+{plan.features.length - 4} more</p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => openEdit(plan)}>
+                  <Pencil className="size-3 mr-1" /> Edit
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleToggleActive(plan)}>
+                  {plan.isActive ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
+                </Button>
+                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(plan.id)}>
+                  <Trash2 className="size-3" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   )
 }

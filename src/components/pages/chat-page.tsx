@@ -306,7 +306,7 @@ export function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.1-nemotron-70b-instruct')
+  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.3-nemotron-super-49b-v1')
   const [assistantType, setAssistantType] = useState('general')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [loadingConversation, setLoadingConversation] = useState(false)
@@ -570,12 +570,12 @@ export function ChatPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="nvidia/llama-3.1-nemotron-70b-instruct">Nemotron 70B</SelectItem>
-              <SelectItem value="meta/llama-3.1-405b-instruct">Llama 3.1 405B</SelectItem>
-              <SelectItem value="meta/llama-3.1-70b-instruct">Llama 3.1 70B</SelectItem>
-              <SelectItem value="mistralai/mixtral-8x22b-instruct">Mixtral 8x22B</SelectItem>
+              <SelectItem value="nvidia/llama-3.3-nemotron-super-49b-v1">Nemotron Super 49B</SelectItem>
+              <SelectItem value="nvidia/llama-3.1-nemotron-ultra-253b-v1">Nemotron Ultra 253B</SelectItem>
+              <SelectItem value="meta/llama-3.3-70b-instruct">Llama 3.3 70B</SelectItem>
+              <SelectItem value="mistralai/mistral-nemotron">Mistral Nemotron</SelectItem>
               <SelectItem value="deepseek-ai/deepseek-r1">DeepSeek R1</SelectItem>
-              <SelectItem value="google/gemma-2-27b-it">Gemma 2 27B</SelectItem>
+              <SelectItem value="@cf/meta/llama-3-8b-instruct">Llama 3 8B (Fast)</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -88,10 +88,11 @@ const COMPLEXITY_OPTIONS = [
 ]
 
 const CODE_MODELS = [
-  { value: 'nvidia/llama-3.1-nemotron-70b-instruct', label: 'Nemotron 70B' },
-  { value: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+  { value: 'nvidia/llama-3.3-nemotron-super-49b-v1', label: 'Nemotron Super 49B' },
+  { value: 'nvidia/llama-3.1-nemotron-ultra-253b-v1', label: 'Nemotron Ultra 253B' },
   { value: 'qwen/qwen2.5-coder-32b-instruct', label: 'Qwen Coder 32B' },
   { value: 'deepseek-ai/deepseek-r1', label: 'DeepSeek R1' },
+  { value: '@cf/deepseek-ai/deepseek-coder-6.7b-instruct', label: 'DeepSeek Coder 6.7B (Fast)' },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ export function CodePage() {
   const [prompt, setPrompt] = useState('')
   const [context, setContext] = useState('')
   const [complexity, setComplexity] = useState('moderate')
-  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.1-nemotron-70b-instruct')
+  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.3-nemotron-super-49b-v1')
 
   // Generation state
   const [generating, setGenerating] = useState(false)

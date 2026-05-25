@@ -69,11 +69,9 @@ interface ImageResponse {
 
 // Image model options
 const IMAGE_MODELS = [
-  { value: 'stabilityai/stable-diffusion-xl', label: 'Stable Diffusion XL' },
-  { value: 'stabilityai/stable-diffusion-3.5-large', label: 'SD 3.5 Large' },
-  { value: 'stabilityai/stable-diffusion-3.5-large-turbo', label: 'SD 3.5 Turbo' },
-  { value: 'black-forest-labs/flux-1-dev', label: 'FLUX.1 Dev' },
-  { value: 'black-forest-labs/flux-1-schnell', label: 'FLUX.1 Schnell' },
+  { value: '@cf/black-forest-labs/flux-1-schnell', label: 'FLUX.1 Schnell (Cloudflare)' },
+  { value: 'stabilityai/stable-diffusion-xl', label: 'Stable Diffusion XL (NVIDIA)' },
+  { value: '@cf/stabilityai/stable-diffusion-xl-base-1.0', label: 'SDXL Base (Cloudflare)' },
 ]
 
 // Size options
@@ -95,7 +93,7 @@ export function ImagePage() {
   const [quality, setQuality] = useState('standard')
   const [style, setStyle] = useState('vivid')
   const [numImages, setNumImages] = useState<1 | 2 | 3 | 4>(1)
-  const [imageModel, setImageModel] = useState('stabilityai/stable-diffusion-xl')
+  const [imageModel, setImageModel] = useState('@cf/black-forest-labs/flux-1-schnell')
 
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false)

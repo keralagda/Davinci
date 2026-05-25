@@ -61,12 +61,12 @@ const STEPS = [
 ]
 
 const MODEL_OPTIONS = [
-  { value: 'nvidia/llama-3.1-nemotron-70b-instruct', label: 'Nemotron 70B' },
-  { value: 'meta/llama-3.1-405b-instruct', label: 'Llama 3.1 405B' },
-  { value: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
-  { value: 'mistralai/mixtral-8x22b-instruct', label: 'Mixtral 8x22B' },
+  { value: 'nvidia/llama-3.3-nemotron-super-49b-v1', label: 'Nemotron Super 49B' },
+  { value: 'nvidia/llama-3.1-nemotron-ultra-253b-v1', label: 'Nemotron Ultra 253B' },
+  { value: 'meta/llama-3.3-70b-instruct', label: 'Llama 3.3 70B' },
+  { value: 'mistralai/mistral-nemotron', label: 'Mistral Nemotron' },
   { value: 'deepseek-ai/deepseek-r1', label: 'DeepSeek R1' },
-  { value: 'deepseek-ai/deepseek-v3', label: 'DeepSeek V3' },
+  { value: '@cf/meta/llama-3-8b-instruct', label: 'Llama 3 8B (Fast)' },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ export function ArticleWizardPage() {
   const [step, setStep] = useState(1)
   const [topic, setTopic] = useState('')
   const [keywords, setKeywords] = useState('')
-  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.1-nemotron-70b-instruct')
+  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.3-nemotron-super-49b-v1')
 
   // Outline state
   const [outline, setOutline] = useState<OutlineSection[]>([])

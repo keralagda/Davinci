@@ -1621,14 +1621,73 @@ async function main() {
 
   // Clean existing data
   console.log('🧹 Cleaning existing data...')
+  await prisma.favorite.deleteMany()
+  await prisma.notification.deleteMany()
+  await prisma.subscription.deleteMany()
   await prisma.generatedDoc.deleteMany()
+  await prisma.imageGeneration.deleteMany()
+  await prisma.codeGeneration.deleteMany()
+  await prisma.transcription.deleteMany()
+  await prisma.tTSGeneration.deleteMany()
   await prisma.message.deleteMany()
   await prisma.conversation.deleteMany()
   await prisma.template.deleteMany()
   await prisma.templateCategory.deleteMany()
   await prisma.pricingPlan.deleteMany()
   await prisma.setting.deleteMany()
+  await prisma.session.deleteMany()
+  await prisma.account.deleteMany()
+  await prisma.verificationToken.deleteMany()
+  await prisma.user.deleteMany()
   console.log('✅ Cleaned existing data\n')
+
+  // Seed users
+  console.log('👤 Seeding users...')
+  const users = [
+    { id: 'admin-001', email: 'admin@davinci.ai', name: 'Admin User', password: 'admin123', role: 'admin', plan: 'enterprise', wordsUsed: 12450, imagesUsed: 23, chatMessages: 156, codeGenerated: 45, audioMinutes: 12.5 },
+    { id: 'user-001', email: 'user@davinci.ai', name: 'Alex Johnson', password: 'user123', role: 'user', plan: 'professional', wordsUsed: 8920, imagesUsed: 15, chatMessages: 89, codeGenerated: 23, audioMinutes: 5.2 },
+    { id: 'demo-user-001', email: 'demo@davinci.ai', name: 'Demo User', password: 'demo123', role: 'user', plan: 'professional', wordsUsed: 5400, imagesUsed: 8, chatMessages: 45, codeGenerated: 12, audioMinutes: 3.0 },
+    { id: 'user-002', email: 'sarah@example.com', name: 'Sarah Williams', password: 'password123', role: 'user', plan: 'starter', wordsUsed: 3200, imagesUsed: 5, chatMessages: 20, codeGenerated: 3, audioMinutes: 0 },
+    { id: 'user-003', email: 'mike@example.com', name: 'Mike Chen', password: 'password123', role: 'user', plan: 'free', wordsUsed: 800, imagesUsed: 2, chatMessages: 5, codeGenerated: 0, audioMinutes: 0 },
+    { id: 'user-004', email: 'emma@example.com', name: 'Emma Davis', password: 'password123', role: 'user', plan: 'professional', wordsUsed: 15600, imagesUsed: 32, chatMessages: 120, codeGenerated: 67, audioMinutes: 8.5 },
+    { id: 'user-005', email: 'james@example.com', name: 'James Wilson', password: 'password123', role: 'user', plan: 'enterprise', wordsUsed: 45000, imagesUsed: 100, chatMessages: 300, codeGenerated: 150, audioMinutes: 25.0 },
+  ]
+
+  for (const u of users) {
+    await prisma.user.create({ data: { ...u, isActive: true } })
+    console.log(`  ✓ ${u.name} (${u.email})`)
+  }
+  console.log('')
+
+  // Seed subscriptions for each user
+  console.log('📋 Seeding subscriptions...')
+  const planLimits: Record<string, { words: number; images: number; chat: number; code: number; audio: number }> = {
+    free: { words: 5000, images: 10, chat: 50, code: 20, audio: 5 },
+    starter: { words: 25000, images: 50, chat: 200, code: 100, audio: 30 },
+    professional: { words: 100000, images: 200, chat: 0, code: 0, audio: 120 },
+    enterprise: { words: 0, images: 0, chat: 0, code: 0, audio: 0 },
+  }
+
+  for (const u of users) {
+    const limits = planLimits[u.plan] || planLimits.free
+    await prisma.subscription.create({
+      data: {
+        userId: u.id,
+        planType: u.plan,
+        status: 'active',
+        wordsLimit: limits.words,
+        imagesLimit: limits.images,
+        chatMessagesLimit: limits.chat,
+        codeLimit: limits.code,
+        audioMinutesLimit: limits.audio,
+        startDate: new Date(),
+        amount: u.plan === 'free' ? 0 : u.plan === 'starter' ? 9.99 : u.plan === 'professional' ? 29.99 : 99.99,
+        currency: 'USD',
+      },
+    })
+    console.log(`  ✓ ${u.name} → ${u.plan}`)
+  }
+  console.log('')
 
   // Seed categories
   console.log('📂 Seeding template categories...')
@@ -1763,16 +1822,24 @@ async function main() {
 
   // Verify counts
   console.log('📊 Verification:')
+  const userCount = await prisma.user.count()
+  const subCount = await prisma.subscription.count()
   const catCount = await prisma.templateCategory.count()
   const tempCount = await prisma.template.count()
   const planCount = await prisma.pricingPlan.count()
   const settingCount = await prisma.setting.count()
+  console.log(`  Users: ${userCount}`)
+  console.log(`  Subscriptions: ${subCount}`)
   console.log(`  Categories: ${catCount}`)
   console.log(`  Templates: ${tempCount}`)
   console.log(`  Pricing Plans: ${planCount}`)
   console.log(`  Settings: ${settingCount}`)
 
   console.log('\n🎉 Seeding complete!')
+  console.log('\n📌 Login credentials:')
+  console.log('  Admin: admin@davinci.ai / admin123')
+  console.log('  User:  user@davinci.ai / user123')
+  console.log('  Demo:  demo@davinci.ai / demo123')
 }
 
 main()
