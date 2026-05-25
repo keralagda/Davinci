@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String?
+  image         String?
+  role          String    @default("user") // user, admin
+  plan          String    @default("free") // free, prepaid, monthly, yearly, lifetime
+  wordsUsed     Int       @default(0)
+  imagesUsed    Int       @default(0)
+  chatMessages  Int       @default(0)
+  codeGenerated Int       @default(0)
+  audioMinutes  Float     @default(0)
+  balance       Float     @default(0)
+  affiliateCode String?   @unique
+  referredBy    String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  conversations  Conversation[]
+  generatedDocs  GeneratedDoc[]
+  imageGens      ImageGeneration[]
+  codeGens       CodeGeneration[]
+  transcriptions Transcription[]
+  ttsGens        TTSGeneration[]
+  favorites      Favorite[]
+  subscriptions  Subscription[]
+  notifications  Notification[]
+
+  @@map("users")
+}
+
+model TemplateCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  icon        String?
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  templates Template[]
+
+  @@map("template_categories")
+}
+
+model Template {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String
+  icon         String?
+  prompt       String   // The system prompt / template structure
+  fields       String   // JSON string of input fields [{name, label, type, placeholder, required}]
+  categoryId   String
+  outputType   String   @default("text") // text, markdown, html, code
+  toneOptions  String?  // JSON: ["Professional", "Casual", "Formal", "Friendly", "Persuasive"]
+  languageOptions String? // JSON: ["English", "Spanish", "French", ...]
+  isPremium    Boolean  @default(false)
+  isFeatured   Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category    TemplateCategory @relation(fields: [categoryId], references: [id])
+  generatedDocs GeneratedDoc[]
+
+  @@map("templates")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  assistantType String? // general, coder, writer, marketing, etc.
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id])
+  messages Message[]
+
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // user, assistant, system
+  content        String
+  model          String?
+  tokens         Int?
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model GeneratedDoc {
+  id         String   @id @default(cuid())
+  userId     String
+  templateId String?
+  title      String
+  input      String   // JSON of input values
+  output     String   // The generated content
+  wordsCount Int?
+  model      String?
+  language   String?
+  tone       String?
+  isFavorite Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user     User      @relation(fields: [userId], references: [id])
+  template Template? @relation(fields: [templateId], references: [id])
+
+  @@map("generated_docs")
+}
+
+model ImageGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+  prompt      String
+  negativePrompt String?
+  size        String   @default("1024x1024")
+  quality     String   @default("standard") // standard, hd
+  style       String?  // vivid, natural
+  model       String   @default("dall-e-3")
+  imageUrl    String?
+  status      String   @default("pending") // pending, completed, failed
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("image_generations")
+}
+
+model CodeGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+  prompt      String
+  language    String?  // programming language
+  code        String
+  explanation String?
+  model       String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("code_generations")
+}
+
+model Transcription {
+  id          String   @id @default(cuid())
+  userId      String
+  fileName    String
+  fileSize    Int?
+  duration    Float?
+  language    String?
+  transcript  String?
+  status      String   @default("pending") // pending, processing, completed, failed
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("transcriptions")
+}
+
+model TTSGeneration {
+  id          String   @id @default(cuid())
+  userId      String
+  text        String
+  voice       String?
+  language    String?
+  speed       Float    @default(1.0)
+  audioUrl    String?
+  duration    Float?
+  status      String   @default("pending") // pending, processing, completed, failed
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("tts_generations")
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  itemType   String   // template, doc, image, conversation
+  itemId     String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, itemType, itemId])
+  @@map("favorites")
+}
+
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String
+  planType          String   // free, prepaid, monthly, yearly, lifetime
+  status            String   @default("active") // active, expired, cancelled
+  wordsLimit        Int?
+  imagesLimit       Int?
+  chatMessagesLimit Int?
+  codeLimit         Int?
+  audioMinutesLimit Float?
+  startDate         DateTime
+  endDate           DateTime?
+  amount            Float?
+  currency          String?  @default("USD")
+  createdAt         DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model PricingPlan {
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  description       String?
+  price             Float
+  currency          String   @default("USD")
+  interval          String   @default("monthly") // one-time, monthly, yearly
+  wordsLimit        Int      @default(0)  // 0 = unlimited
+  imagesLimit       Int      @default(0)
+  chatMessagesLimit Int      @default(0)
+  codeLimit         Int      @default(0)
+  audioMinutesLimit Float    @default(0)
+  features          String   // JSON array of feature strings
+  isPopular         Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  @@map("pricing_plans")
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  @@map("settings")
+}
