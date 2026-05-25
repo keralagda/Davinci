@@ -9,6 +9,12 @@ import { WriterPage } from '@/components/pages/writer-page'
 import { ChatPage } from '@/components/pages/chat-page'
 import { ImagePage } from '@/components/pages/image-page'
 import { CodePage } from '@/components/pages/code-page'
+import { ArticleWizardPage } from '@/components/pages/article-wizard-page'
+import { SmartEditorPage } from '@/components/pages/smart-editor-page'
+import { RewriterPage } from '@/components/pages/rewriter-page'
+import { AiVisionPage } from '@/components/pages/ai-vision-page'
+import { FileChatPage } from '@/components/pages/file-chat-page'
+import { WebChatPage } from '@/components/pages/web-chat-page'
 import { SpeechToTextPage } from '@/components/pages/speech-to-text-page'
 import { TextToSpeechPage } from '@/components/pages/text-to-speech-page'
 import { DocumentsPage } from '@/components/pages/documents-page'
@@ -20,9 +26,15 @@ import { useAppStore, type Page } from '@/lib/store'
 const pageComponents: Record<Page, React.ComponentType> = {
   dashboard: DashboardPage,
   writer: WriterPage,
+  'article-wizard': ArticleWizardPage,
+  'smart-editor': SmartEditorPage,
+  rewriter: RewriterPage,
   chat: ChatPage,
   image: ImagePage,
   code: CodePage,
+  'ai-vision': AiVisionPage,
+  'file-chat': FileChatPage,
+  'web-chat': WebChatPage,
   'speech-to-text': SpeechToTextPage,
   'text-to-speech': TextToSpeechPage,
   documents: DocumentsPage,

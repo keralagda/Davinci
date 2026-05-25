@@ -162,8 +162,12 @@ const LENGTH_OPTIONS = [
 ] as const
 
 const MODEL_OPTIONS = [
-  { value: 'gpt-4o', label: 'GPT-4o' },
-  { value: 'gpt-4o-mini', label: 'GPT-4o-mini' },
+  { value: 'nvidia/llama-3.1-nemotron-70b-instruct', label: 'Nemotron 70B' },
+  { value: 'meta/llama-3.1-405b-instruct', label: 'Llama 3.1 405B' },
+  { value: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+  { value: 'mistralai/mixtral-8x22b-instruct', label: 'Mixtral 8x22B' },
+  { value: 'deepseek-ai/deepseek-r1', label: 'DeepSeek R1' },
+  { value: 'deepseek-ai/deepseek-v3', label: 'DeepSeek V3' },
 ]
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -193,7 +197,7 @@ export function WriterPage() {
   const [selectedTone, setSelectedTone] = useState('Professional')
   const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [selectedLength, setSelectedLength] = useState<string>('medium')
-  const [selectedModel, setSelectedModel] = useState('gpt-4o')
+  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.1-nemotron-70b-instruct')
   const [generating, setGenerating] = useState(false)
   const [generatedContent, setGeneratedContent] = useState('')
   const [wordCount, setWordCount] = useState(0)
@@ -826,21 +830,18 @@ export function WriterPage() {
                   <Label className="text-xs flex items-center gap-1">
                     <Cpu className="size-3" /> Model
                   </Label>
-                  <div className="flex gap-2">
-                    {MODEL_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setSelectedModel(opt.value)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                          selectedModel === opt.value
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                            : 'bg-secondary text-muted-foreground border-border hover:border-emerald-500/30'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                    <SelectTrigger className="w-full text-sm">
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MODEL_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

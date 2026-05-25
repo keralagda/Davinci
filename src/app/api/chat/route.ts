@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { generateText } from '@/lib/ai-helpers';
+import { generateTextWithContext, DEFAULT_MODELS } from '@/lib/ai-helpers';
 
 const DEMO_USER_ID = 'demo-user-001';
 
@@ -28,7 +28,7 @@ function getSystemPrompt(assistantType: string): string {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, conversationId, assistantType } = body;
+    const { message, conversationId, assistantType, model } = body;
 
     if (!message) {
       return NextResponse.json(
@@ -36,6 +36,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Use the provided model or fall back to the default NVIDIA chat model
+    const selectedModel = model || DEFAULT_MODELS.chat;
 
     let conversation;
     let convId = conversationId;
@@ -95,22 +98,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate response
-    const zai = await (await import('z-ai-web-dev-sdk')).default.create();
-    const result = await zai.chat.completions.create({
-      messages: aiMessages,
-      thinking: { type: 'disabled' },
-    });
-
-    let assistantContent = '';
-    const choice = result.choices?.[0];
-    if (choice?.message?.content) {
-      assistantContent = choice.message.content;
-    } else if (typeof result === 'string') {
-      assistantContent = result;
-    } else {
-      assistantContent = JSON.stringify(result);
-    }
+    // Generate response using the shared helper with NVIDIA model
+    const assistantContent = await generateTextWithContext(aiMessages, selectedModel);
 
     // Save assistant response
     const assistantMessage = await db.message.create({
@@ -135,6 +124,7 @@ export async function POST(request: NextRequest) {
         content: assistantContent,
         createdAt: assistantMessage.createdAt,
       },
+      model: selectedModel,
     });
   } catch (error) {
     console.error('Chat error:', error);

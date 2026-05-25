@@ -306,7 +306,7 @@ export function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini')
+  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.1-nemotron-70b-instruct')
   const [assistantType, setAssistantType] = useState('general')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [loadingConversation, setLoadingConversation] = useState(false)
@@ -413,6 +413,7 @@ export function ChatPage() {
           message: trimmed,
           conversationId: currentConversationId.current ?? undefined,
           assistantType,
+          model: selectedModel,
         }),
       })
 
@@ -451,7 +452,7 @@ export function ChatPage() {
       // Refocus textarea
       textareaRef.current?.focus()
     }
-  }, [inputValue, isLoading, assistantType, setActiveConversationId, fetchConversations])
+  }, [inputValue, isLoading, assistantType, selectedModel, setActiveConversationId, fetchConversations])
 
   // New chat
   const handleNewChat = useCallback(() => {
@@ -565,12 +566,16 @@ export function ChatPage() {
 
           {/* Model selector */}
           <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectTrigger className="w-[180px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="gpt-4o">GPT-4o</SelectItem>
-              <SelectItem value="gpt-4o-mini">GPT-4o-mini</SelectItem>
+              <SelectItem value="nvidia/llama-3.1-nemotron-70b-instruct">Nemotron 70B</SelectItem>
+              <SelectItem value="meta/llama-3.1-405b-instruct">Llama 3.1 405B</SelectItem>
+              <SelectItem value="meta/llama-3.1-70b-instruct">Llama 3.1 70B</SelectItem>
+              <SelectItem value="mistralai/mixtral-8x22b-instruct">Mixtral 8x22B</SelectItem>
+              <SelectItem value="deepseek-ai/deepseek-r1">DeepSeek R1</SelectItem>
+              <SelectItem value="google/gemma-2-27b-it">Gemma 2 27B</SelectItem>
             </SelectContent>
           </Select>
         </div>

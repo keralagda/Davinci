@@ -4,9 +4,15 @@ import { useTheme } from 'next-themes'
 import {
   LayoutDashboard,
   PenLine,
+  Wand2,
+  FileEdit,
+  RefreshCw,
   MessageSquare,
   ImageIcon,
   Code2,
+  Eye,
+  FileSearch,
+  Globe,
   Mic,
   Volume2,
   FileText,
@@ -40,9 +46,18 @@ import { useAppStore, type Page } from '@/lib/store'
 const mainNavItems: { title: string; icon: React.ElementType; page: Page }[] = [
   { title: 'Dashboard', icon: LayoutDashboard, page: 'dashboard' },
   { title: 'AI Writer', icon: PenLine, page: 'writer' },
+  { title: 'Article Wizard', icon: Wand2, page: 'article-wizard' },
+  { title: 'Smart Editor', icon: FileEdit, page: 'smart-editor' },
+  { title: 'AI Rewriter', icon: RefreshCw, page: 'rewriter' },
   { title: 'AI Chat', icon: MessageSquare, page: 'chat' },
   { title: 'AI Image', icon: ImageIcon, page: 'image' },
   { title: 'AI Code', icon: Code2, page: 'code' },
+]
+
+const toolsNavItems: { title: string; icon: React.ElementType; page: Page }[] = [
+  { title: 'AI Vision', icon: Eye, page: 'ai-vision' },
+  { title: 'File Chat', icon: FileSearch, page: 'file-chat' },
+  { title: 'Web Chat', icon: Globe, page: 'web-chat' },
 ]
 
 const mediaNavItems: { title: string; icon: React.ElementType; page: Page }[] = [
@@ -108,7 +123,7 @@ export function AppSidebar() {
                   Davinci AI
                 </span>
                 <span className="text-[10px] text-muted-foreground">
-                  AI Content Platform
+                  NVIDIA AI Platform
                 </span>
               </div>
             </SidebarMenuButton>
@@ -125,6 +140,32 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {mainNavItems.map((item) => (
+                <SidebarMenuItem key={item.page}>
+                  <SidebarMenuButton
+                    isActive={activePage === item.page}
+                    onClick={() => setActivePage(item.page)}
+                    tooltip={item.title}
+                    className={
+                      activePage === item.page
+                        ? 'bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/20 hover:text-emerald-400 font-medium'
+                        : ''
+                    }
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* AI Tools Navigation */}
+        <SidebarGroup>
+          <SidebarGroupLabel>AI Tools</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {toolsNavItems.map((item) => (
                 <SidebarMenuItem key={item.page}>
                   <SidebarMenuButton
                     isActive={activePage === item.page}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { generateText } from '@/lib/ai-helpers';
+import { generateText, DEFAULT_MODELS } from '@/lib/ai-helpers';
 
 const DEMO_USER_ID = 'demo-user-001';
 
@@ -30,14 +30,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Use the provided model or fall back to the default NVIDIA code model
+    const selectedModel = model || DEFAULT_MODELS.code;
+
     // Build the user prompt with language context
     const langContext = language
       ? `Programming language: ${language}\n\n`
       : '';
     const userPrompt = `${langContext}${prompt}`;
 
-    // Generate code using AI
-    const fullResponse = await generateText(CODE_SYSTEM_PROMPT, userPrompt, model);
+    // Generate code using AI with NVIDIA model
+    const fullResponse = await generateText(CODE_SYSTEM_PROMPT, userPrompt, selectedModel);
 
     // Separate code and explanation
     let code = fullResponse;
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Save to database
+    // Save to database — store the actual NVIDIA model name
     const codeGen = await db.codeGeneration.create({
       data: {
         userId: DEMO_USER_ID,
@@ -67,7 +70,7 @@ export async function POST(request: NextRequest) {
         language: language ?? null,
         code,
         explanation: explanation || null,
-        model: model ?? 'default',
+        model: selectedModel,
       },
     });
 
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
       code,
       explanation,
       language: language ?? 'typescript',
+      model: selectedModel,
     });
   } catch (error) {
     console.error('Code generation error:', error);

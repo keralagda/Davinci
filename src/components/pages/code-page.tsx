@@ -87,6 +87,13 @@ const COMPLEXITY_OPTIONS = [
   { value: 'complex', label: 'Complex', desc: 'Advanced implementation' },
 ]
 
+const CODE_MODELS = [
+  { value: 'nvidia/llama-3.1-nemotron-70b-instruct', label: 'Nemotron 70B' },
+  { value: 'meta/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
+  { value: 'qwen/qwen2.5-coder-32b-instruct', label: 'Qwen Coder 32B' },
+  { value: 'deepseek-ai/deepseek-r1', label: 'DeepSeek R1' },
+]
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function CodePage() {
@@ -95,6 +102,7 @@ export function CodePage() {
   const [prompt, setPrompt] = useState('')
   const [context, setContext] = useState('')
   const [complexity, setComplexity] = useState('moderate')
+  const [selectedModel, setSelectedModel] = useState('nvidia/llama-3.1-nemotron-70b-instruct')
 
   // Generation state
   const [generating, setGenerating] = useState(false)
@@ -132,6 +140,7 @@ export function CodePage() {
         body: JSON.stringify({
           prompt: fullPrompt,
           language,
+          model: selectedModel,
         }),
       })
 
@@ -226,6 +235,23 @@ export function CodePage() {
                   {LANGUAGES.map((lang) => (
                     <SelectItem key={lang} value={lang}>
                       {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Model */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">Model</Label>
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CODE_MODELS.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

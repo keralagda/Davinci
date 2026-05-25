@@ -155,6 +155,9 @@ export function AuthGate() {
             Davinci AI
           </h1>
         </div>
+        <p className="text-center text-xs text-muted-foreground/60 mb-6 -mt-4">
+          Powered by NVIDIA NIM
+        </p>
 
         <Card className="border-border/50 bg-card/80 backdrop-blur-xl shadow-2xl shadow-black/10">
           <CardHeader className="space-y-1 text-center pb-4">

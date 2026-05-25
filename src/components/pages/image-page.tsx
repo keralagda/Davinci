@@ -67,11 +67,20 @@ interface ImageResponse {
   status: string
 }
 
+// Image model options
+const IMAGE_MODELS = [
+  { value: 'stabilityai/stable-diffusion-xl', label: 'Stable Diffusion XL' },
+  { value: 'stabilityai/stable-diffusion-3.5-large', label: 'SD 3.5 Large' },
+  { value: 'stabilityai/stable-diffusion-3.5-large-turbo', label: 'SD 3.5 Turbo' },
+  { value: 'black-forest-labs/flux-1-dev', label: 'FLUX.1 Dev' },
+  { value: 'black-forest-labs/flux-1-schnell', label: 'FLUX.1 Schnell' },
+]
+
 // Size options
 const SIZE_OPTIONS = [
   { value: '1024x1024', label: 'Square', sublabel: '1024×1024', icon: Square },
-  { value: '1024x1792', label: 'Portrait', sublabel: '1024×1792', icon: RectangleVertical },
-  { value: '1792x1024', label: 'Landscape', sublabel: '1792×1024', icon: RectangleHorizontal },
+  { value: '768x1024', label: 'Portrait', sublabel: '768×1024', icon: RectangleVertical },
+  { value: '1024x768', label: 'Landscape', sublabel: '1024×768', icon: RectangleHorizontal },
 ] as const
 
 // Number of images options
@@ -86,6 +95,7 @@ export function ImagePage() {
   const [quality, setQuality] = useState('standard')
   const [style, setStyle] = useState('vivid')
   const [numImages, setNumImages] = useState<1 | 2 | 3 | 4>(1)
+  const [imageModel, setImageModel] = useState('stabilityai/stable-diffusion-xl')
 
   // Generation state
   const [isGenerating, setIsGenerating] = useState(false)
@@ -141,6 +151,7 @@ export function ImagePage() {
           size,
           quality,
           style,
+          model: imageModel,
         }),
       })
 
@@ -158,7 +169,7 @@ export function ImagePage() {
     } finally {
       setIsGenerating(false)
     }
-  }, [prompt, negativePrompt, size, quality, style, isGenerating, fetchGallery])
+  }, [prompt, negativePrompt, size, quality, style, imageModel, isGenerating, fetchGallery])
 
   // Download image
   const handleDownload = useCallback(async (imageUrl: string, imageId: string) => {
@@ -278,6 +289,23 @@ export function ImagePage() {
                     )
                   })}
                 </div>
+              </div>
+
+              {/* Image Model */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Model</Label>
+                <Select value={imageModel} onValueChange={setImageModel}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IMAGE_MODELS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Quality & Style row */}
